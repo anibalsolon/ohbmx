@@ -54,6 +54,21 @@
     }
     #timeline li.talk .content > div, #timeline li.keynote .content > div {
       padding: 5px;
+      padding-right: 5%;
+    }
+
+    #timeline li.talk.active, #timeline li.keynote.active {
+      background: #BBB;
+    }
+    #timeline li.talk.active:after, #timeline li.keynote.active:after {
+      content: ' ';
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      right: 0;
+      width: 5%;
+      background: #DDD;
+      z-index: 20;
     }
 
     #timeline li.tw-1240820101647142920 .content {
@@ -73,6 +88,7 @@
       right: 0;
       left: 0;
       top: 0;
+      z-index: 30;
     }
     #timeline li.talk .title {
       font-size: 120%;
@@ -81,6 +97,7 @@
     #timeline li.talk .date {
       background: #333;
       color: #FFF;
+      z-index: 40;
     }
 
     #timeline li.keynote:before {
@@ -94,6 +111,7 @@
       right: 0;
       left: 0;
       top: 0;
+      z-index: 30;
     }
     #timeline li.keynote .title {
       font-size: 120%;
@@ -102,6 +120,7 @@
     #timeline li.keynote .date {
       background: #333;
       color: #FFF;
+      z-index: 40;
     }
 
     #timeline li.break:before {
@@ -125,7 +144,11 @@
       color: #FFF;
     }
 
-
+    #thread img {
+      width: 100%;
+      height: auto;
+      margin-top: 20px;
+    }
     #thread li {
       list-style: none;
       background: #EEE;
@@ -226,7 +249,7 @@
         let affiliations = pieces[2]
         let hashtags = formatHashtags(pieces[4])
 
-        let html = $(`
+        let html = `
           <div class="date">${date}</div>
           <div class="content">
             <div class="title">${title}</div>
@@ -234,18 +257,8 @@
             <div class="affiliations">${affiliations}</div>
             <div class="hashtags">${hashtags}</div>
           </div>
-        `).click(function(e) {
-          history.pushState({'twid': tw.ids[0]}, '', `#talk-${tw.ids[0]}`)
-
-          $('#thread').html('')
-          tw.thread.map((stw) => {
-            $('#thread').append(
-              $(`<li class="tw-${stw.id}" />`).html(templates['default'](stw))
-            )
-          })
-          $('#thread').scrollTop(0)
-        })
-        return html
+        `
+        return $(html)
       },
       keynote: function(tw) {
         tw.date = new Date(tw.date)
@@ -266,6 +279,23 @@
         `
         return $(html)
       },
+      thread: function(tw) {
+        tw.date = new Date(tw.date)
+        let date = formatDate(tw.date)
+        let content = formatText(tw.text)
+        let media = tw.media
+
+        let html = `
+          <div class="date">${date}</div>
+          <div class="content">${content}</div>
+        `
+        if (media.length > 0) {
+          html += `
+          <div class="media"><img src="${media[0]}"></div>
+          `
+        }
+        return $(html)
+      },
     }
 
     $(document).ready(function(){
@@ -284,6 +314,32 @@
           $('#timeline').append(
             $(`<li class="${rendering} ${tw.ids.map((twid) => `tw-${twid}`).join(' ')}"/>`)
               .html(templates[rendering](tw))
+              .click(function(e) {
+                if (!['talk', 'keynote'].includes(rendering)) {
+                  return
+                }
+                
+                $('#timeline').scrollTop(0)
+                var el = $(this)
+                var elOffset = el.offset().top
+                var elHeight = el.height()
+                var height = $('#timeline').height()
+                var offset = elHeight < height ? elOffset - ((height / 2) - (elHeight / 2)) : elOffset
+                console.log(elOffset, elHeight, height, offset)
+                $('#timeline').scrollTop(offset)
+
+                history.pushState({'twid': tw.ids[0]}, '', `#${rendering}-${tw.ids[0]}`)
+
+                $('#timeline li').removeClass('active')
+                el.addClass('active')
+                $('#thread').html('')
+                tw.thread.map((stw) => {
+                  $('#thread').append(
+                    $(`<li class="tw-${stw.id}" />`).html(templates['thread'](stw))
+                  )
+                })
+                $('#thread').scrollTop(0)
+              })
           )
         })
 
@@ -299,11 +355,6 @@
           var twid = window.location.hash.split('-')[1]
           var el = $(`.tw-${twid}`)
           if (el.length > 0) {
-            var elOffset = el.offset().top
-            var elHeight = el.height()
-            var height = $('#timeline').height()
-            var offset = elHeight < height ? elOffset - ((height / 2) - (elHeight / 2)) : elOffset
-            $('#timeline').scrollTop(offset)
             el.find('.content').click()
           }
         }
