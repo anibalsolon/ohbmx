@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <title></title>
+  <meta name="author" content="">
+  <meta name="description" content="">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+  <style>
+    html, body { overflow: hidden; }
+    #timeline {
+      margin: 0;
+      padding: 0;
+      width: 40%;
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      /* left: 30%; */
+      left: 10%;
+      overflow: auto;
+    }
+    #thread {
+      margin: 0;
+      padding: 0;
+      width: 40%;
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      /* left: 30%; */
+      left: 50%;
+      overflow: auto;
+    }
+    #timeline li {
+      list-style: none;
+      background: #EEE;
+      padding: 10px;
+      margin: 10px;
+      position: relative;
+      padding-top: 2.5rem;
+      overflow: hidden;
+    }
+    #timeline li .date {
+      position: absolute;
+      font-size: 0.8rem;
+      padding: 0.2rem;
+      right: 0;
+      top: 0;
+    }
+
+    #timeline li.talk, #timeline li.keynote {
+      background: #DDD;
+    }
+    #timeline li.talk .content > div, #timeline li.keynote .content > div {
+      padding: 5px;
+    }
+
+    #timeline li.tw-1240820101647142920 .content {
+      text-align: center;
+      font-size: 120%;
+      font-weight: bold;
+    }
+
+    #timeline li.talk:before {
+      content: "Talk";
+      font-weight: bold;
+      background: #333;
+      color: #FFF;
+      position: absolute;
+      font-size: 0.8rem;
+      padding: 0.2rem;
+      right: 0;
+      left: 0;
+      top: 0;
+    }
+    #timeline li.talk .title {
+      font-size: 120%;
+      font-weight: bold;
+    }
+    #timeline li.talk .date {
+      background: #333;
+      color: #FFF;
+    }
+
+    #timeline li.keynote:before {
+      content: "Keynote";
+      font-weight: bold;
+      background: #333;
+      color: #FFF;
+      position: absolute;
+      font-size: 0.8rem;
+      padding: 0.2rem;
+      right: 0;
+      left: 0;
+      top: 0;
+    }
+    #timeline li.keynote .title {
+      font-size: 120%;
+      font-weight: bold;
+    }
+    #timeline li.keynote .date {
+      background: #333;
+      color: #FFF;
+    }
+
+    #timeline li.break:before {
+      content: "Break";
+      font-weight: bold;
+      background: #333;
+      color: #FFF;
+      position: absolute;
+      font-size: 0.8rem;
+      padding: 0.2rem;
+      right: 0;
+      left: 0;
+      top: 0;
+    }
+    #timeline li.break .title {
+      font-size: 120%;
+      font-weight: bold;
+    }
+    #timeline li.break .date {
+      background: #333;
+      color: #FFF;
+    }
+
+
+    #thread li {
+      list-style: none;
+      background: #EEE;
+      padding: 10px;
+      margin: 10px;
+      position: relative;
+      padding-top: 2.5rem;
+    }
+    #thread li .date {
+      position: absolute;
+      font-size: 0.8rem;
+      padding: 0.2rem;
+      right: 0;
+      top: 0;
+    }
+    
+  </style>
+</head>
+
+<body>
+  <ul id="timeline"></ul>
+  <ul id="thread"></ul>
+  <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+  <script>
+    function formatLinks(text) {
+      return (text || "").replace(
+        /([^\S]|^)(((https?\:\/\/)|(www\.))(\S+))/gi,
+        function(match, space, url){
+          var hyperlink = url;
+          if (!hyperlink.match('^https?:\/\/')) {
+            hyperlink = 'http://' + hyperlink;
+          }
+          return space + '<a href="' + hyperlink + '">' + url + '</a>'
+        }
+      )
+    }
+    function formatMentions(text) {
+      return (text || "").replace(
+        /[@]+[A-Za-z0-9-_]+/g,
+        function(u) {
+          var mention = u.replace("@", "");
+          return u.link('http://twitter.com/' + mention)
+        }
+      )
+    }
+    function formatHashtags(text) {
+      return (text || "").replace(
+        /[#]+[A-Za-z0-9-_]+/g,
+        function(t) {
+          var tag = t.replace("#", "%23")
+          return t.link('http://search.twitter.com/search?q=' + tag)
+        }
+      )
+    }
+
+    function formatDate(date) {
+      return `${date.getDate().toString().padStart(2, 0)}/${(date.getMonth() + 1).toString().padStart(2, 0)} ` +
+             `${date.getHours().toString().padStart(2, 0)}:${date.getMinutes().toString().padStart(2, 0)}`
+    }
+
+    function formatText(text) {
+      return formatLinks(formatHashtags(formatMentions(text))).replace(/(?:\r\n|\r|\n)/g, '<br>')
+    }
+
+    const templates = {
+      default: function(tw) {
+        tw.date = new Date(tw.date)
+        let date = formatDate(tw.date)
+        let content = formatText(tw.text)
+
+        let html = `
+          <div class="date">${date}</div>
+          <div class="content">${content}</div>
+        `
+        return $(html)
+      },
+      break: function(tw) {
+        tw.date = new Date(tw.date)
+        let date = formatDate(tw.date)
+        let pieces = tw.text.split(/\s*\n+\s*/)
+        let title = pieces[1].replace('▶', '').trim()
+        let content = formatText(pieces.slice(2, pieces.length).join("\n") || "")
+
+        let html = `
+          <div class="date">${date}</div>
+          <div class="title">${title}</div>
+          <div class="content">${content}</div>
+        `
+        return $(html)
+      },
+      talk: function(tw) {
+        tw.date = new Date(tw.date)
+        let date = formatDate(tw.date)
+
+        let pieces = tw.text.split(/\s*\n+\s*/)
+        let title = pieces[3].replace('▶', '').trim()
+        let authors = formatMentions(pieces[1])
+        let affiliations = pieces[2]
+        let hashtags = formatHashtags(pieces[4])
+
+        let html = $(`
+          <div class="date">${date}</div>
+          <div class="content">
+            <div class="title">${title}</div>
+            <div class="authors">${authors}</div>
+            <div class="affiliations">${affiliations}</div>
+            <div class="hashtags">${hashtags}</div>
+          </div>
+        `).click(function(e) {
+          history.pushState({'twid': tw.ids[0]}, '', `#talk-${tw.ids[0]}`)
+
+          $('#thread').html('')
+          tw.thread.map((stw) => {
+            $('#thread').append(
+              $(`<li class="tw-${stw.id}" />`).html(templates['default'](stw))
+            )
+          })
+          $('#thread').scrollTop(0)
+        })
+        return html
+      },
+      keynote: function(tw) {
+        tw.date = new Date(tw.date)
+        let date = formatDate(tw.date)
+
+        let pieces = tw.text.split(/\s*\n+\s*/)
+        let title = pieces[3].replace('▶', '').replace('KEYNOTE:', '').trim()
+        let authors = formatMentions(pieces[1])
+        let affiliations = pieces[2]
+
+        let html = `
+          <div class="date">${date}</div>
+          <div class="content">
+            <div class="title">${title}</div>
+            <div class="authors">${authors}</div>
+            <div class="affiliations">${affiliations}</div>
+          </div>
+        `
+        return $(html)
+      },
+    }
+
+    $(document).ready(function(){
+      $.getJSON("timeline.json", function(data) {
+        data.timeline.map((tw) => {
+
+          let rendering = 'default'
+          if (tw.text.match(/#OHBMx-[0-9]+ *✳ *#talk/)){
+            rendering = 'talk'
+          } else if (tw.text.match(/#OHBMx-[0-9]+ *✳ *#keynote/)){
+            rendering = 'keynote'
+          } else if (tw.text.match(/#OHBMx-000 ✳ #break/)){
+            rendering = 'break'
+          }
+
+          $('#timeline').append(
+            $(`<li class="${rendering} ${tw.ids.map((twid) => `tw-${twid}`).join(' ')}"/>`)
+              .html(templates[rendering](tw))
+          )
+        })
+
+        // console.log(data.timeline[4])
+        // data.timeline[4].thread.map((tw) => {
+        //   $('#thread').append(
+        //     $(`<li class="tw-${tw.id}" />`).html(templates['default'](tw))
+        //   )
+        // })
+
+        if (window.location.hash.indexOf('talk') > -1 || window.location.hash.indexOf('keynote') > -1) {
+          console.log(window.location.hash)
+          var twid = window.location.hash.split('-')[1]
+          var el = $(`.tw-${twid}`)
+          if (el.length > 0) {
+            var elOffset = el.offset().top
+            var elHeight = el.height()
+            var height = $('#timeline').height()
+            var offset = elHeight < height ? elOffset - ((height / 2) - (elHeight / 2)) : elOffset
+            $('#timeline').scrollTop(offset)
+            el.find('.content').click()
+          }
+        }
+
+      })
+      $(window).on('hashchange', function () {
+        window.alert(window.location.hash)
+      });
+    })
+  </script>
+</body>
+
+</html>
