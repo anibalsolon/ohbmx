@@ -266,9 +266,15 @@
       padding: 5px;
       display: flex;
       position: fixed;
-      bottom: 0;
+      bottom: -120px;
+      left: 0;
+      right: 0;
       z-index: 300;
       background: #fff;
+      transition: bottom 1s;
+    }
+    body.threading #thread li.users {
+      bottom: 0;
     }
 
     #thread li.users .user {
@@ -299,7 +305,6 @@
     }
     body.threading #back {
       bottom: 0;
-      transition: bottom 1s;
     }
     @media (min-width: 768px) {
       #back {
@@ -377,7 +382,9 @@
     }
 
     function formatText(text) {
-      return formatLinks(formatHashtags(formatMentions(text))).replace(/(?:\r\n|\r|\n)/g, '<br>')
+      return formatLinks(formatHashtags(formatMentions(text)))
+          .replace(/[\r\n|\r|\n]\s*[\r\n|\r|\n]/g, '\n')
+          .split('\n').map((t) => `<p>${t}</p>`).join('')
     }
 
     function tweetLink(user, twid) {
@@ -544,12 +551,10 @@
                 $('#thread').html('')
 
                 if (tw.thread) {
-                  var thread_users = [...new Set(tw.thread.map((t) => t.user))]
-                  thread_users.map(
-                    (u) => users_item.append(templates['user'](users[u]))
+                  $('#thread').append(
+                    $(`<li class="users" />`)
+                      .html(templates['user'](users[tw.thread[0].user]))
                   )
-                  var users_item = $(`<li class="users" />`).html(templates['user'](users[tw.thread[0].user]))
-                  $('#thread').append(users_item)
 
                   tw.thread.map((stw) => {
                     $('#thread').append(
