@@ -12,7 +12,6 @@
     *, ::after, ::before {
       box-sizing: border-box;
     }
-    html, body { overflow: hidden; }
     body {
       margin: 0;
       font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,"Noto Sans",sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol","Noto Color Emoji";
@@ -22,6 +21,9 @@
       color: #212529;
       text-align: left;
       background-color: #fff;
+    }
+    body.threading {
+      overflow: hidden;
     }
     a {
       color: #007bff;
@@ -35,32 +37,31 @@
     #timeline {
       margin: 0;
       padding: 0;
-      position: absolute;
-      top: 0;
-      bottom: 0;
-      overflow: auto;
       width: 100%;
       left: 0;
       transition: left 1s;
     }
     #thread {
+      background: #fff;
       margin: 0;
       padding: 0;
       padding-bottom: 40%;
-      position: absolute;
+      position: fixed;
       top: 0;
       bottom: 0;
       overflow: auto;
       width: 100%;
       left: 100%;
       transition: left 1s;
+      z-index: 100;
     }
 
-    #timeline.threading {
+    body.threading #timeline {
       left: -100%;
       transition: left 1s;
+      overflow: hidden;
     }
-    #thread.threading {
+    body.threading #thread {
       left: 0;
       transition: left 1s;
     }
@@ -86,34 +87,34 @@
         content: "←";
         padding-top: 0;
       }
-      #thread.threading::after, #thread.threading::before {
+      body.threading #thread::after, body.threading #thread::before {
         content: none;
       }
       
-      #timeline, #timeline.threading {
+      #timeline, body.threading #timeline {
         width: 50%;
         left: 0;
         transition: none;
       }
-      #thread, #thread.threading {
+      #thread, body.threading #thread {
         width: 50%;
         left: 50%;
         transition: none;
       }
-      #thread.threading {
+      body.threading #thread {
         display: block;
         padding-bottom: 30%;
       }
     }
     @media (min-width: 992px) {
-      #timeline, #timeline.threading  {
+      #timeline,body.threading #timeline  {
         width: 40%;
         left: 10%;
         transition: none;
       }
-      #thread, #thread.threading {
-        width: 40%;
-        left: 50%;
+      #thread, body.threading #thread {
+        width: 60%;
+        left: 40%;
         transition: none;
       }
     }
@@ -164,7 +165,7 @@
       font-weight: bold;
     }
 
-    #timeline li.talk:before {
+    #timeline li.talk::before {
       content: "Talk";
       font-weight: bold;
       background: #333;
@@ -187,7 +188,7 @@
       z-index: 40;
     }
 
-    #timeline li.keynote:before {
+    #timeline li.keynote::before {
       content: "Keynote";
       font-weight: bold;
       background: #333;
@@ -210,7 +211,7 @@
       z-index: 40;
     }
 
-    #timeline li.break:before {
+    #timeline li.break::before {
       content: "Break";
       font-weight: bold;
       background: #333;
@@ -259,13 +260,19 @@
 
     #back {
       font-size: 1rem;
-      padding: 15px;
+      padding: 1rem;
       color: #888;
       background: #fff;
       text-align: right;
       position: fixed;
-      bottom: 0;
+      bottom: -5rem;
       right: 0;
+      z-index: 200;
+      transition: bottom 1s;
+    }
+    body.threading #back {
+      bottom: 0;
+      transition: bottom 1s;
     }
     @media (min-width: 768px) {
       #back {
@@ -451,7 +458,7 @@
           el.find('.content').click()
         }
       } else {
-        $('#timeline, #thread').removeClass('threading')
+        $('body').removeClass('threading')
         $('#timeline li').removeClass('active')
       }
     }
@@ -482,7 +489,6 @@
                   return
                 }
 
-                $('#timeline, #thread').addClass('threading')
 
                 var elOffset = $('#timeline').scrollTop() + el.offset().top
                 var elHeight = el.height()
@@ -490,7 +496,7 @@
                 var offset = elHeight < height ? elOffset - ((height / 2) - (elHeight / 2)) : elOffset
                 $('#timeline').animate({
                   scrollTop: offset
-                }, 1000)
+                }, 200)
 
                 history.pushState({'twid': tw.ids[0]}, '', `#${rendering}-${tw.ids[0]}`)
 
@@ -504,6 +510,7 @@
                 })
                 $('#thread a').click(function(e) { e.stopPropagation() })
                 $('#thread').scrollTop(0)
+                $('body').addClass('threading')
               })
           )
           $('#timeline a').click(function(e) { e.stopPropagation() })
@@ -513,6 +520,10 @@
           e.preventDefault()
           history.pushState({}, '', '#')
           handleHash()
+        })
+
+        $('#thread').scroll(function(e) {
+          e.stopPropagation();
         })
 
         handleHash()
