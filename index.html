@@ -13,25 +13,57 @@
     #timeline {
       margin: 0;
       padding: 0;
-      width: 40%;
       position: absolute;
       top: 0;
       bottom: 0;
-      /* left: 30%; */
-      left: 10%;
       overflow: auto;
+      width: 100%;
+      left: 0;
     }
     #thread {
       margin: 0;
       padding: 0;
-      width: 40%;
       position: absolute;
       top: 0;
       bottom: 0;
-      /* left: 30%; */
-      left: 50%;
       overflow: auto;
+      width: 100%;
+      left: 100%;
     }
+
+    #timeline.threading {
+      left: -100%;
+      transition: left 1s;
+    }
+    #thread.threading {
+      left: 0;
+      transition: left 1s;
+    }
+    @media (min-width: 768px) {
+      #timeline, #timeline.threading {
+        width: 50%;
+        left: 0;
+        transition: none;
+      }
+      #thread, #thread.threading {
+        width: 50%;
+        left: 50%;
+        transition: none;
+      }
+    }
+    @media (min-width: 992px) {
+      #timeline, #timeline.threading  {
+        width: 40%;
+        left: 10%;
+        transition: none;
+      }
+      #thread, #thread.threading {
+        width: 40%;
+        left: 50%;
+        transition: none;
+      }
+    }
+
     #timeline li {
       list-style: none;
       background: #EEE;
@@ -56,6 +88,9 @@
 
     #timeline li.talk, #timeline li.keynote {
       background: #DDD;
+    }
+    #timeline li.talk a, #timeline li.keynote a {
+      cursor: pointer;
     }
     #timeline li.talk .content > div, #timeline li.keynote .content > div {
       padding: 5px;
@@ -138,11 +173,6 @@
       color: #FFF;
     }
 
-    #thread img {
-      width: 100%;
-      height: auto;
-      margin-top: 20px;
-    }
     #thread li {
       list-style: none;
       background: #EEE;
@@ -157,6 +187,15 @@
       padding: 0.2rem;
       right: 0;
       top: 0;
+    }
+    #thread li .media img {
+      width: 100%;
+      height: auto;
+      margin-top: 20px;
+    }
+    #thread li .metadata a img {
+      width: 1rem;
+      height: 1rem;
     }
     
   </style>
@@ -175,7 +214,7 @@
           if (!hyperlink.match('^https?:\/\/')) {
             hyperlink = 'http://' + hyperlink;
           }
-          return space + '<a href="' + hyperlink + '">' + url + '</a>'
+          return space + '<a href="' + hyperlink + '" target="_blank">' + url + '</a>'
         }
       )
     }
@@ -184,7 +223,7 @@
         /[@]+[A-Za-z0-9-_]+/g,
         function(u) {
           var mention = u.replace("@", "");
-          return u.link('http://twitter.com/' + mention)
+          return '<a href="' + 'http://twitter.com/' + mention + '" target="_blank">' + u + '</a>'
         }
       )
     }
@@ -288,7 +327,7 @@
         let media = tw.media
 
         let html = `
-          <div class="metadata">${date}</div>
+          <div class="metadata">${date} ${tweetLink('twitter', tw.id)}</div>
           <div class="content">${content}</div>
         `
         if (media.length > 0) {
@@ -310,6 +349,8 @@
         if (el.length > 0) {
           el.find('.content').click()
         }
+      } else {
+        $('#timeline, #thread').removeClass('threading')
       }
     }
 
@@ -335,6 +376,12 @@
                 }
                 
                 var el = $(this)
+                if (el.hasClass('active')) {
+                  return
+                }
+
+                $('#timeline, #thread').addClass('threading')
+
                 var elOffset = $('#timeline').scrollTop() + el.offset().top
                 var elHeight = el.height()
                 var height = $('#timeline').height()
@@ -353,9 +400,11 @@
                     $(`<li class="tw-${stw.id}" />`).html(templates['thread'](stw))
                   )
                 })
+                $('#thread a').click(function(e) { e.stopPropagation() })
                 $('#thread').scrollTop(0)
               })
           )
+          $('#timeline a').click(function(e) { e.stopPropagation() })
         })
 
         handleHash()
