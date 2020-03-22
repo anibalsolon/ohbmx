@@ -92,6 +92,9 @@
       body.threading #thread::after, body.threading #thread::before {
         content: none;
       }
+      body.threading #thread:empty::after {
+        content: "No tweets found.";
+      }
 
       #timeline, body.threading #timeline {
         width: 50%;
@@ -106,6 +109,10 @@
       body.threading #thread {
         display: block;
         padding-bottom: 30%;
+      }
+      body.threading #thread:empty {
+        display: flex;
+        padding: 0;
       }
     }
     @media (min-width: 992px) {
@@ -247,19 +254,22 @@
     }
     #thread li.tweet .metadata {
       position: absolute;
-      font-size: 0.8rem;
+      font-size: 1rem;
       padding: 0.2rem;
       right: 0;
       top: 0;
     }
     #thread li.tweet .metadata a img {
-      width: 1rem;
-      height: 1rem;
+      width: 1.2rem;
+      height: 1.2rem;
     }
     #thread li.tweet .media img, #thread li.tweet .media video {
       width: 100%;
       height: auto;
       margin-top: 20px;
+    }
+    #thread li.tweet p {
+      margin-top: 0;
     }
 
     #thread li.users {
@@ -267,7 +277,6 @@
       display: flex;
       position: fixed;
       bottom: -120px;
-      left: 0;
       right: 0;
       z-index: 300;
       background: #fff;
@@ -275,6 +284,17 @@
     }
     body.threading #thread li.users {
       bottom: 0;
+    }
+
+    @media (min-width: 768px) {
+      body.threading #thread li.users {
+        width: 50%;
+      }
+    }
+    @media (min-width: 992px) {
+      body.threading #thread li.users {
+        width: 60%;
+      }
     }
 
     #thread li.users .user {
@@ -536,13 +556,13 @@
                   return
                 }
 
-                var elOffset = $('#timeline').scrollTop() + el.offset().top
+                var elOffset = el.offset().top
                 var elHeight = el.height()
-                var height = $('#timeline').height()
+                var height = $(window).height()
                 var offset = elHeight < height ? elOffset - ((height / 2) - (elHeight / 2)) : elOffset
-                $('#timeline').animate({
+                $('html, body').animate({
                   scrollTop: offset
-                }, 200)
+                }, 500)
 
                 history.pushState({'twid': tw.ids[0]}, '', `#${rendering}-${tw.ids[0]}`)
 
@@ -550,7 +570,8 @@
                 el.addClass('active')
                 $('#thread').html('')
 
-                if (tw.thread) {
+                
+                if (tw.thread && tw.thread.length > 0) {
                   $('#thread').append(
                     $(`<li class="users" />`)
                       .html(templates['user'](users[tw.thread[0].user]))
@@ -558,7 +579,8 @@
 
                   tw.thread.map((stw) => {
                     $('#thread').append(
-                      $(`<li class="tweet tw-${stw.id}" />`).html(templates['thread'](stw))
+                      $(`<li class="tweet tw-${stw.id}" />`)
+                        .html(templates['thread'](stw))
                     )
                   })
                   $('#thread a').click(function(e) { e.stopPropagation() })
