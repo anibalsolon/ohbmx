@@ -71,6 +71,13 @@
       padding-top: 0;
     }
 
+    #thread.threading {
+      display: block;
+    }
+    #thread.threading::before, #thread.threading::after {
+      content: none;
+    }
+
     #timeline.threading {
       left: -100%;
       transition: left 1s;
@@ -126,11 +133,15 @@
       height: 1rem;
     }
 
-    #timeline li.talk, #timeline li.keynote {
-      background: #DDD;
+    #timeline li.logo {
+      background: #fff;
+      text-align: center;
+      padding: 5px;
     }
-    #timeline li.talk a, #timeline li.keynote a {
+
+    #timeline li.talk, #timeline li.keynote {
       cursor: pointer;
+      background: #DDD;
     }
     #timeline li.talk .content > div, #timeline li.keynote .content > div {
       padding: 5px;
@@ -220,6 +231,7 @@
       margin: 10px;
       position: relative;
       padding-top: 2.5rem;
+      font-size: 1.2rem;
     }
     #thread li .metadata {
       position: absolute;
@@ -228,7 +240,7 @@
       right: 0;
       top: 0;
     }
-    #thread li .media img {
+    #thread li .media img, #thread li .media video {
       width: 100%;
       height: auto;
       margin-top: 20px;
@@ -242,7 +254,18 @@
 </head>
 
 <body>
-  <ul id="timeline"></ul>
+  <ul id="timeline">
+    <li class="logo">
+      <img src="https://pbs.twimg.com/profile_images/1222874533327253504/WW3isOED_400x400.png" />
+      <p>
+        This is a compilation of the tweets from OHBMx, that happened on 20/3/2021.
+        Scroll through the talks, and click on them to show the presentations.
+      </p>
+      <p>
+        You can check the original tweet by clicking on <img width="20" height="20" src="data:image/png;base64,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"/>
+      </p>
+    </li>
+  </ul>
   <ul id="thread"></ul>
   <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
   <script>
@@ -271,10 +294,21 @@
       return (text || "").replace(
         /[#]+[A-Za-z0-9-_]+/g,
         function(t) {
-          var tag = t.replace("#", "%23")
-          return t.link('http://search.twitter.com/search?q=' + tag)
+          var tag = t.replace("#", "")
+          return '<a href="' + 'https://twitter.com/hashtag/' + tag + '" target="_blank">' + t + '</a>'
         }
       )
+    }
+
+    function formatMedia(media) {
+      if (media.type == 'image') {
+        return `<img src="${media.url}">`
+      } else if (media.type == 'video') {
+        return `<video controls>
+          <source src="${media.url}" >
+          Your browser does not support the video tag.
+        </video>`
+      }
     }
 
     function formatDate(date) {
@@ -289,7 +323,7 @@
     function tweetLink(user, twid) {
       return `
         <a href="https://twitter.com/${user}/status/${twid}" target="_blank">
-        <img src="data:image/png;base64,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"/>
+          <img width="20" height="20" src="data:image/png;base64,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"/>
         </a>
       `
     }
@@ -328,7 +362,8 @@
         let title = pieces[3].replace('▶', '').trim()
         let authors = formatMentions(pieces[1])
         let affiliations = pieces[2]
-        let hashtags = formatHashtags(pieces[4])
+        let main_hashtag = pieces[0].split('✳')[0].trim()
+        let hashtags = formatHashtags(main_hashtag + ' ' + pieces[4])
 
         let html = `
           <div class="metadata">${date} ${tweetLink('twitter', tw.ids[0])}</div>
@@ -373,7 +408,7 @@
         if (media.length > 0) {
           html += `
           <div class="media">
-            <img src="${media[0]}">
+            ${formatMedia(media[0])}
           </div>
           `
         }
