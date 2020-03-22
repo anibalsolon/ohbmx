@@ -22,8 +22,10 @@
       text-align: left;
       background-color: #fff;
     }
-    body.threading {
-      overflow: hidden;
+    @media (min-width: 768px) {
+      body.threading {
+        overflow: auto;
+      }
     }
     a {
       color: #007bff;
