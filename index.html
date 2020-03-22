@@ -92,7 +92,7 @@
       body.threading #thread::after, body.threading #thread::before {
         content: none;
       }
-      
+
       #timeline, body.threading #timeline {
         width: 50%;
         left: 0;
@@ -236,28 +236,53 @@
 
     #thread li {
       list-style: none;
+      position: relative;
+    }
+    #thread li.tweet {
       background: #EEE;
       padding: 10px;
       margin: 10px;
-      position: relative;
       padding-top: 2.5rem;
       font-size: 1.2rem;
     }
-    #thread li .metadata {
+    #thread li.tweet .metadata {
       position: absolute;
       font-size: 0.8rem;
       padding: 0.2rem;
       right: 0;
       top: 0;
     }
-    #thread li .media img, #thread li .media video {
+    #thread li.tweet .metadata a img {
+      width: 1rem;
+      height: 1rem;
+    }
+    #thread li.tweet .media img, #thread li.tweet .media video {
       width: 100%;
       height: auto;
       margin-top: 20px;
     }
-    #thread li .metadata a img {
-      width: 1rem;
-      height: 1rem;
+
+    #thread li.users {
+      padding: 5px;
+      display: flex;
+      position: fixed;
+      bottom: 0;
+      z-index: 300;
+      background: #fff;
+    }
+
+    #thread li.users .user {
+      padding: 10px;
+      display: flex;
+      align-items: center;
+    }
+
+    #thread li.users .user .avatar {
+      border: 1px solid #CCC;
+      padding: 10px;
+    }
+    #thread li.users .user .metadata {
+      padding: 10px;
     }
 
     #back {
@@ -281,7 +306,7 @@
         display: none;
       }
     }
-    
+
   </style>
 </head>
 
@@ -366,10 +391,10 @@
     const templates = {
       default: function(tw) {
         tw.date = new Date(tw.date)
-        let date = formatDate(tw.date)
-        let content = formatText(tw.text)
+        var date = formatDate(tw.date)
+        var content = formatText(tw.text)
 
-        let html = `
+        var html = `
           <div class="metadata">${date} ${tweetLink('twitter', tw.ids[0])}</div>
           <div class="content">${content}</div>
         `
@@ -377,12 +402,12 @@
       },
       break: function(tw) {
         tw.date = new Date(tw.date)
-        let date = formatDate(tw.date)
-        let pieces = tw.text.split(/\s*\n+\s*/)
-        let title = pieces[1].replace('▶', '').trim()
-        let content = formatText(pieces.slice(2, pieces.length).join("\n") || "")
+        var date = formatDate(tw.date)
+        var pieces = tw.text.split(/\s*\n+\s*/)
+        var title = pieces[1].replace('▶', '').trim()
+        var content = formatText(pieces.slice(2, pieces.length).join("\n") || "")
 
-        let html = `
+        var html = `
           <div class="metadata">${date} ${tweetLink('twitter', tw.ids[0])}</div>
           <div class="title">${title}</div>
           <div class="content">${content}</div>
@@ -391,16 +416,16 @@
       },
       talk: function(tw) {
         tw.date = new Date(tw.date)
-        let date = formatDate(tw.date)
+        var date = formatDate(tw.date)
 
-        let pieces = tw.text.split(/\s*\n+\s*/)
-        let title = pieces[3].replace('▶', '').trim()
-        let authors = formatMentions(pieces[1])
-        let affiliations = pieces[2]
-        let main_hashtag = pieces[0].split('✳')[0].trim()
-        let hashtags = formatHashtags(main_hashtag + ' ' + pieces[4])
+        var pieces = tw.text.split(/\s*\n+\s*/)
+        var title = pieces[3].replace('▶', '').trim()
+        var authors = formatMentions(pieces[1])
+        var affiliations = pieces[2]
+        var main_hashtag = pieces[0].split('✳')[0].trim()
+        var hashtags = formatHashtags(main_hashtag + ' ' + pieces[4])
 
-        let html = `
+        var html = `
           <div class="metadata">${date} ${tweetLink('twitter', tw.ids[0])}</div>
           <div class="content">
             <div class="title">${title}</div>
@@ -413,14 +438,14 @@
       },
       keynote: function(tw) {
         tw.date = new Date(tw.date)
-        let date = formatDate(tw.date)
+        var date = formatDate(tw.date)
 
-        let pieces = tw.text.split(/\s*\n+\s*/)
-        let title = pieces[3].replace('▶', '').replace('KEYNOTE:', '').trim()
-        let authors = formatMentions(pieces[1])
-        let affiliations = pieces[2]
+        var pieces = tw.text.split(/\s*\n+\s*/)
+        var title = pieces[3].replace('▶', '').replace('KEYNOTE:', '').trim()
+        var authors = formatMentions(pieces[1])
+        var affiliations = pieces[2]
 
-        let html = `
+        var html = `
           <div class="metadata">${date} ${tweetLink('twitter', tw.ids[0])}</div>
           <div class="content">
             <div class="title">${title}</div>
@@ -432,11 +457,11 @@
       },
       thread: function(tw) {
         tw.date = new Date(tw.date)
-        let date = formatDate(tw.date)
-        let content = formatText(tw.text)
-        let media = tw.media
+        var date = formatDate(tw.date)
+        var content = formatText(tw.text)
+        var media = tw.media
 
-        let html = `
+        var html = `
           <div class="metadata">${date} ${tweetLink('twitter', tw.id)}</div>
           <div class="content">${content}</div>
         `
@@ -447,6 +472,18 @@
           </div>
           `
         }
+        return $(html)
+      },
+      user: function(user) {
+        var html = `
+          <div class="user">
+            <div class="avatar"><img src="${user.avatar}" /></div>
+            <div class="metadata">
+              <div class="name">${user.name}</div>
+              <div class="screen_name">${formatMentions(`@${user.screen_name}`)}</div>
+            </div>
+          </div>
+        `
         return $(html)
       },
     }
@@ -467,9 +504,10 @@
 
     $(document).ready(function(){
       $.getJSON("timeline.json", function(data) {
+        var users = data.users
         data.timeline.map((tw) => {
 
-          let rendering = 'default'
+          var rendering = 'default'
           if (tw.text.match(/#OHBMx-[0-9]+ *✳ *#talk/)){
             rendering = 'talk'
           } else if (tw.text.match(/#OHBMx-[0-9]+ *✳ *#keynote/)){
@@ -479,18 +517,17 @@
           }
 
           $('#timeline').append(
-            $(`<li class="${rendering} ${tw.ids.map((twid) => `tw-${twid}`).join(' ')}"/>`)
+            $(`<li class="tweet ${rendering} ${tw.ids.map((twid) => `tw-${twid}`).join(' ')}"/>`)
               .html(templates[rendering](tw))
               .click(function(e) {
                 if (!['talk', 'keynote'].includes(rendering)) {
                   return
                 }
-                
+
                 var el = $(this)
                 if (el.hasClass('active')) {
                   return
                 }
-
 
                 var elOffset = $('#timeline').scrollTop() + el.offset().top
                 var elHeight = el.height()
@@ -505,16 +542,28 @@
                 $('#timeline li').removeClass('active')
                 el.addClass('active')
                 $('#thread').html('')
-                tw.thread.map((stw) => {
-                  $('#thread').append(
-                    $(`<li class="tw-${stw.id}" />`).html(templates['thread'](stw))
+
+                if (tw.thread) {
+                  var thread_users = [...new Set(tw.thread.map((t) => t.user))]
+                  thread_users.map(
+                    (u) => users_item.append(templates['user'](users[u]))
                   )
-                })
-                $('#thread a').click(function(e) { e.stopPropagation() })
+                  var users_item = $(`<li class="users" />`).html(templates['user'](users[tw.thread[0].user]))
+                  $('#thread').append(users_item)
+
+                  tw.thread.map((stw) => {
+                    $('#thread').append(
+                      $(`<li class="tweet tw-${stw.id}" />`).html(templates['thread'](stw))
+                    )
+                  })
+                  $('#thread a').click(function(e) { e.stopPropagation() })
+                }
+
                 $('#thread').scrollTop(0)
                 $('body').addClass('threading')
               })
           )
+
           $('#timeline a').click(function(e) { e.stopPropagation() })
         })
 
@@ -531,7 +580,6 @@
         handleHash()
       })
       $(window).on('hashchange', function () {
-        console.log('changed!')
         handleHash()
       });
     })
