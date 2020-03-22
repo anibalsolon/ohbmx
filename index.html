@@ -41,7 +41,7 @@
       padding-top: 2.5rem;
       overflow: hidden;
     }
-    #timeline li .date {
+    #timeline li .metadata {
       position: absolute;
       font-size: 0.8rem;
       padding: 0.2rem;
@@ -49,26 +49,20 @@
       top: 0;
     }
 
+    #timeline li .metadata a img {
+      width: 1rem;
+      height: 1rem;
+    }
+
     #timeline li.talk, #timeline li.keynote {
       background: #DDD;
     }
     #timeline li.talk .content > div, #timeline li.keynote .content > div {
       padding: 5px;
-      padding-right: 5%;
     }
 
     #timeline li.talk.active, #timeline li.keynote.active {
       background: #BBB;
-    }
-    #timeline li.talk.active:after, #timeline li.keynote.active:after {
-      content: ' ';
-      position: absolute;
-      top: 0;
-      bottom: 0;
-      right: 0;
-      width: 5%;
-      background: #DDD;
-      z-index: 20;
     }
 
     #timeline li.tw-1240820101647142920 .content {
@@ -94,7 +88,7 @@
       font-size: 120%;
       font-weight: bold;
     }
-    #timeline li.talk .date {
+    #timeline li.talk .metadata {
       background: #333;
       color: #FFF;
       z-index: 40;
@@ -117,7 +111,7 @@
       font-size: 120%;
       font-weight: bold;
     }
-    #timeline li.keynote .date {
+    #timeline li.keynote .metadata {
       background: #333;
       color: #FFF;
       z-index: 40;
@@ -139,7 +133,7 @@
       font-size: 120%;
       font-weight: bold;
     }
-    #timeline li.break .date {
+    #timeline li.break .metadata {
       background: #333;
       color: #FFF;
     }
@@ -157,7 +151,7 @@
       position: relative;
       padding-top: 2.5rem;
     }
-    #thread li .date {
+    #thread li .metadata {
       position: absolute;
       font-size: 0.8rem;
       padding: 0.2rem;
@@ -213,6 +207,14 @@
       return formatLinks(formatHashtags(formatMentions(text))).replace(/(?:\r\n|\r|\n)/g, '<br>')
     }
 
+    function tweetLink(user, twid) {
+      return `
+        <a href="https://twitter.com/${user}/status/${twid}" target="_blank">
+        <img src="data:image/png;base64,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"/>
+        </a>
+      `
+    }
+
     const templates = {
       default: function(tw) {
         tw.date = new Date(tw.date)
@@ -220,7 +222,7 @@
         let content = formatText(tw.text)
 
         let html = `
-          <div class="date">${date}</div>
+          <div class="metadata">${date} ${tweetLink('twitter', tw.ids[0])}</div>
           <div class="content">${content}</div>
         `
         return $(html)
@@ -233,7 +235,7 @@
         let content = formatText(pieces.slice(2, pieces.length).join("\n") || "")
 
         let html = `
-          <div class="date">${date}</div>
+          <div class="metadata">${date} ${tweetLink('twitter', tw.ids[0])}</div>
           <div class="title">${title}</div>
           <div class="content">${content}</div>
         `
@@ -250,7 +252,7 @@
         let hashtags = formatHashtags(pieces[4])
 
         let html = `
-          <div class="date">${date}</div>
+          <div class="metadata">${date} ${tweetLink('twitter', tw.ids[0])}</div>
           <div class="content">
             <div class="title">${title}</div>
             <div class="authors">${authors}</div>
@@ -270,7 +272,7 @@
         let affiliations = pieces[2]
 
         let html = `
-          <div class="date">${date}</div>
+          <div class="metadata">${date} ${tweetLink('twitter', tw.ids[0])}</div>
           <div class="content">
             <div class="title">${title}</div>
             <div class="authors">${authors}</div>
@@ -286,16 +288,29 @@
         let media = tw.media
 
         let html = `
-          <div class="date">${date}</div>
+          <div class="metadata">${date}</div>
           <div class="content">${content}</div>
         `
         if (media.length > 0) {
           html += `
-          <div class="media"><img src="${media[0]}"></div>
+          <div class="media">
+            <img src="${media[0]}">
+          </div>
           `
         }
         return $(html)
       },
+    }
+
+    function handleHash() {
+      var hash = window.location.hash || ''
+      if (hash.indexOf('talk') > -1 || hash.indexOf('keynote') > -1) {
+        var twid = hash.split('-')[1]
+        var el = $(`.tw-${twid}`)
+        if (el.length > 0) {
+          el.find('.content').click()
+        }
+      }
     }
 
     $(document).ready(function(){
@@ -319,14 +334,14 @@
                   return
                 }
                 
-                $('#timeline').scrollTop(0)
                 var el = $(this)
-                var elOffset = el.offset().top
+                var elOffset = $('#timeline').scrollTop() + el.offset().top
                 var elHeight = el.height()
                 var height = $('#timeline').height()
                 var offset = elHeight < height ? elOffset - ((height / 2) - (elHeight / 2)) : elOffset
-                console.log(elOffset, elHeight, height, offset)
-                $('#timeline').scrollTop(offset)
+                $('#timeline').animate({
+                  scrollTop: offset
+                }, 1000)
 
                 history.pushState({'twid': tw.ids[0]}, '', `#${rendering}-${tw.ids[0]}`)
 
@@ -343,25 +358,10 @@
           )
         })
 
-        // console.log(data.timeline[4])
-        // data.timeline[4].thread.map((tw) => {
-        //   $('#thread').append(
-        //     $(`<li class="tw-${tw.id}" />`).html(templates['default'](tw))
-        //   )
-        // })
-
-        if (window.location.hash.indexOf('talk') > -1 || window.location.hash.indexOf('keynote') > -1) {
-          console.log(window.location.hash)
-          var twid = window.location.hash.split('-')[1]
-          var el = $(`.tw-${twid}`)
-          if (el.length > 0) {
-            el.find('.content').click()
-          }
-        }
-
+        handleHash()
       })
       $(window).on('hashchange', function () {
-        window.alert(window.location.hash)
+        handleHash()
       });
     })
   </script>
